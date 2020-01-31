@@ -17,8 +17,8 @@ import ij.gui.GenericDialog;
 import ij.measure.Calibration;
 
 /**
- * for background subtraction in stack
- * GRAY8, GRAY16, GRAY32, COLOR_RGB images.
+ * for background subtraction in Z stack
+ * GRAY8, GRAY16, GRAY32, COLOR_RGB hyperstacks.
  *
  * @author Jiri Janacek
  */
@@ -32,10 +32,6 @@ public class Lipschitz_3D implements PlugIn {
 		if (IJ.versionLessThan("1.46j"))
 			return;
 		ImagePlus imp = IJ.getImage();
-		if (imp.isComposite() && imp.getNChannels()==imp.getStackSize()) {
-			IJ.error("Lipschitz 3D", "Composite color images not supported");
-			return;
-		}
 		if (!showDialog())
 			return;
 
@@ -73,18 +69,19 @@ public class Lipschitz_3D implements PlugIn {
 			filterHyperstack(imp, dx, dy, dz, slope, tophat);
 			return;
 		}
-		ImageStack res = filter(imp.getStack(), dx, dy, dz, slope, tophat);
+		ImageStack res = filter(imp.getStack(), imp.getStackSize(), dx, dy, dz, slope, tophat);
 		imp.setStack(res);
 	}
 	
-	public static ImageStack filter(ImageStack ims, double dx, double dy, double dz, double slope, boolean tophat) {
+	public static ImageStack filter(ImageStack ims, int depth, double dx, double dy, double dz, double slope, boolean tophat) {
 		if (ims.getBitDepth()==24)
-			return filterRGB(ims, dx, dy, dz, slope, tophat);
+			return filterRGB(ims, depth, dx, dy, dz, slope, tophat);
 		
 		// get width and height
 		int width = ims.getWidth();
 		int height = ims.getHeight();
-		int depth= ims.getSize();
+		int nums = ims.getSize();
+		int numz= nums / depth;
 
 		double ddx= dx * slope;
 		double ddy= dy * slope;
@@ -98,85 +95,87 @@ public class Lipschitz_3D implements PlugIn {
 		else imf = ims.convertToFloat();
 
 		double p, q;
-		for (int k = 0; k < depth; k++) {
-			for (int j = 0; j < height; j++)
-				for (int i = 0; i < width; i++) {
-					p = ims.getVoxel(i, j, k);					
-					if (i > 0) {
-						q = imf.getVoxel(i - 1, j, k) + ddx;
-						if (q < p) 
-							p = q;
+		for (int l = 0; l < numz; l++ ) {
+			for (int k = l * depth; k < (l + 1) * depth; k++) {
+				for (int j = 0; j < height; j++)
+					for (int i = 0; i < width; i++) {
+						p = ims.getVoxel(i, j, k);					
+						if (i > 0) {
+							q = imf.getVoxel(i - 1, j, k) + ddx;
+							if (q < p) 
+								p = q;
+							if (j > 0) {
+								q = imf.getVoxel(i - 1, j - 1, k) + ddxy;
+								if (q < p) p = q;
+							}
+							if (k > 0) {
+								q = imf.getVoxel(i - 1, j, k - 1) + ddxz;
+								if (q < p) p = q;
+							}
+						}
 						if (j > 0) {
-							q = imf.getVoxel(i - 1, j - 1, k) + ddxy;
-							if (q < p) p = q;
+							q = imf.getVoxel(i, j - 1, k) + ddy;
+							if (q < p) 
+								p = q;
+							if (k > 0) {
+								q = imf.getVoxel(i, j - 1, k - 1) + ddyz;
+								if (q < p) p = q;
+							}
 						}
 						if (k > 0) {
-							q = imf.getVoxel(i - 1, j, k - 1) + ddxz;
-							if (q < p) p = q;
-						}
+							q = imf.getVoxel(i, j, k - 1) + ddz;
+							if (q < p) 
+								p = q;
+						}	
+						imf.setVoxel(i, j, k, p);
 					}
-					if (j > 0) {
-						q = imf.getVoxel(i, j - 1, k) + ddy;
-						if (q < p) 
-							p = q;
-						if (k > 0) {
-							q = imf.getVoxel(i, j - 1, k - 1) + ddyz;
-							if (q < p) p = q;
+				IJ.showProgress(2*l*depth+k, 2*nums-1);
+			}
+			for (int k = (l + 1) * depth - 1; k >= l * depth; k--) {
+				for (int j = height - 1; j >= 0; j--)
+					for (int i = width - 1; i >= 0; i--) {
+						p = imf.getVoxel(i, j, k);					
+						if (i < width - 1) {
+							q = imf.getVoxel(i + 1, j, k) + ddx;
+							if (q < p) 
+								p = q;
+							if (j < height - 1) {
+								q = imf.getVoxel(i + 1, j + 1, k) + ddxy;
+								if (q < p) p = q;
+							}
+							if (k < depth - 1) {
+								q = imf.getVoxel(i + 1, j, k + 1) + ddxz;
+								if (q < p) p = q;
+							}
 						}
-					}
-					if (k > 0) {
-						q = imf.getVoxel(i, j, k - 1) + ddz;
-						if (q < p) 
-							p = q;
-					}	
-					imf.setVoxel(i, j, k, p);
-				}
-			IJ.showProgress(k, 2*depth-1);
-		}
-		for (int k = depth - 1; k >= 0; k--) {
-			for (int j = height - 1; j >= 0; j--)
-				for (int i = width - 1; i >= 0; i--) {
-					p = imf.getVoxel(i, j, k);					
-					if (i < width - 1) {
-						q = imf.getVoxel(i + 1, j, k) + ddx;
-						if (q < p) 
-							p = q;
 						if (j < height - 1) {
-							q = imf.getVoxel(i + 1, j + 1, k) + ddxy;
-							if (q < p) p = q;
+							q = imf.getVoxel(i, j + 1, k) + ddy;
+							if (q < p) 
+								p = q;
+							if (k < depth - 1) {
+								q = imf.getVoxel(i, j + 1, k + 1) + ddyz;
+								if (q < p) p = q;
+							}
 						}
 						if (k < depth - 1) {
-							q = imf.getVoxel(i + 1, j, k + 1) + ddxz;
-							if (q < p) p = q;
-						}
+							q = imf.getVoxel(i, j, k + 1) + ddz;
+							if (q < p) 
+								p = q;
+						}					
+						imf.setVoxel(i, j, k, p);
 					}
-					if (j < height - 1) {
-						q = imf.getVoxel(i, j + 1, k) + ddy;
-						if (q < p) 
-							p = q;
-						if (k < depth - 1) {
-							q = imf.getVoxel(i, j + 1, k + 1) + ddyz;
-							if (q < p) p = q;
-						}
-					}
-					if (k < depth - 1) {
-						q = imf.getVoxel(i, j, k + 1) + ddz;
-						if (q < p) 
-							p = q;
-					}					
-					imf.setVoxel(i, j, k, p);
-				}
-		IJ.showProgress(2*depth-k-1, 2*depth-1);
-	}
+				IJ.showProgress(2*l*depth+2*depth-k-1, 2*nums-1);
+			}
+		}
 		
 		if (tophat) {
-			for (int k = 0; k < depth; k++)
+			for (int k = 0; k < nums; k++)
 				for (int j = 0; j < height; j++)
 					for (int i = 0; i < width; i++)
 						ims.setVoxel(i, j, k, ims.getVoxel(i, j, k) - imf.getVoxel(i, j, k));
 		}
 		else {
-			for (int k = 0; k < depth; k++)
+			for (int k = 0; k < nums; k++)
 				for (int j = 0; j < height; j++)
 					for (int i = 0; i < width; i++)
 						ims.setVoxel(i, j, k, imf.getVoxel(i, j, k));
@@ -185,31 +184,29 @@ public class Lipschitz_3D implements PlugIn {
 }
 	
 	private static void filterHyperstack(ImagePlus imp, double dx, double dy, double dz, double slope, boolean tophat) {
-		if (imp.getNDimensions()>4) {
-			IJ.error("5D hyperstacks are currently not supported");
-			return;
-		}
 		if (imp.getNChannels()==1) {
-			ImageStack stack = filter(imp.getStack(), dx, dy, dz, slope, tophat);
+			ImageStack stack = filter(imp.getStack(), imp.getNSlices(), dx, dy, dz, slope, tophat);
 			imp.setStack(stack);
 			return;
-		}
+	    }
         ImagePlus[] channels = ChannelSplitter.split(imp);
-        int n = channels.length;
-        for (int i=0; i<n; i++) {
-			ImageStack stack = filter(channels[i].getStack(), dx, dy, dz, slope, tophat);
+        int nch = channels.length;
+        for (int i = 0; i < nch; i++) {
+			ImageStack stack = filter(channels[i].getStack(), imp.getNSlices(), dx, dy, dz, slope, tophat);
 			channels[i].setStack(stack);
 		}
 		ImagePlus imp2 = RGBStackMerge.mergeChannels(channels, false);
+		int dims[]= imp.getDimensions();
 		imp.setImage(imp2);
-		imp.setC(1);
+		imp.setDimensions(dims[2], dims[3], dims[4]);
+		imp.setC(1); //channel position
 	}
 
-	private static ImageStack filterRGB(ImageStack rgb_in, double dx, double dy, double dz, double slope, boolean tophat) {
-        ImageStack[] channels = ChannelSplitter.splitRGB(rgb_in, false);
-		ImageStack red = filter(channels[0], dx, dy, dz, slope, tophat);
-		ImageStack green = filter(channels[1], dx, dy, dz, slope, tophat);
-		ImageStack blue = filter(channels[2], dx, dy, dz, slope, tophat);
+	private static ImageStack filterRGB(ImageStack rgb_in, int nz, double dx, double dy, double dz, double slope, boolean tophat) {
+		ImageStack[] channels = ChannelSplitter.splitRGB(rgb_in, false);
+		ImageStack red = filter(channels[0], nz, dx, dy, dz, slope, tophat);
+		ImageStack green = filter(channels[1], nz, dx, dy, dz, slope, tophat);
+		ImageStack blue = filter(channels[2], nz, dx, dy, dz, slope, tophat);
         return RGBStackMerge.mergeStacks(red, green, blue, false);
 	}
 

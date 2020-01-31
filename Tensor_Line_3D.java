@@ -10,6 +10,8 @@ package biomat;
 
 import ij.IJ;
 import ij.plugin.*;
+import ij.process.ImageProcessor;
+import ij.process.ImageStatistics;
 import ij.ImageJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -74,8 +76,17 @@ public class Tensor_Line_3D implements PlugIn {
 		double dz= cal.pixelDepth;
 		ImageStack res = filter(imp.getStack(), dx, dy, dz, sigma);
 //		imp.setStack(res);  //in place
+//find maximum
+		double maxv = 0.;
+		int nums = res.getSize();
+		for (int i = 1; i <= nums; i++) {
+			ImageProcessor iprc= res.getProcessor(i);
+			ImageStatistics stat= ImageStatistics.getStatistics(iprc, ImageStatistics.MIN_MAX, null);
+			if (maxv < stat.max) maxv = stat.max;
+		}
 //new image		
 		ImagePlus outp = new ImagePlus("Tensor Line 3D Filtered", res); 
+		outp.setDisplayRange(0., maxv);
 		outp.show();
 		outp.updateAndDraw();
 //new image
