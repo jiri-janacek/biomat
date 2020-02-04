@@ -37,18 +37,19 @@ public class StackLin_Contrast implements PlugIn {
 			IJ.error("StackLin Contrast", "image type not supported");
 			return;
 		}
-		if (!showDialog())
+		if (! showDialog())
 			return;
 
 		image.startTiming();  
 		// slice numbers start with 1 for historical reasons
-		for (int i = 1; i <= image.getStackSize(); i++) {
-			int pos[]= image.convertIndexToPosition(i);
+		for (int i = 1; i <= image.getStackSize(); i ++) {
+			int pos[] = image.convertIndexToPosition(i);
 			double coeff;
 			if (image.getNSlices() == 1) 
-				coeff= first;
+				coeff = first;
 			else
-				coeff= ((double)(image.getNSlices()-pos[1])*first+(double)(pos[1]-1)*last)/(double)(image.getNSlices()-1);
+				coeff = ((double)(image.getNSlices() - pos[1]) * first 
+						+ (double)(pos[1] - 1) * last) / (double)(image.getNSlices() - 1);
 				image.getStack().getProcessor(i).multiply(coeff);
 		}
 		

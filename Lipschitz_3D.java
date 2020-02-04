@@ -60,10 +60,10 @@ public class Lipschitz_3D implements PlugIn {
 	}
 
 	private void run(ImagePlus imp) {
-		Calibration cal= imp.getCalibration();
-		double dx= cal.pixelWidth;
-		double dy= cal.pixelHeight;
-		double dz= cal.pixelDepth;
+		Calibration cal = imp.getCalibration();
+		double dx = cal.pixelWidth;
+		double dy = cal.pixelHeight;
+		double dz = cal.pixelDepth;
 		IJ.showStatus("Calculating Lipschitz 3D.");
 		if (imp.isHyperStack()) {
 			filterHyperstack(imp, dx, dy, dz, slope, tophat);
@@ -74,21 +74,21 @@ public class Lipschitz_3D implements PlugIn {
 	}
 	
 	public static ImageStack filter(ImageStack ims, int depth, double dx, double dy, double dz, double slope, boolean tophat) {
-		if (ims.getBitDepth()==24)
+		if (ims.getBitDepth() == 24)
 			return filterRGB(ims, depth, dx, dy, dz, slope, tophat);
 		
 		// get width and height
 		int width = ims.getWidth();
 		int height = ims.getHeight();
 		int nums = ims.getSize();
-		int numz= nums / depth;
+		int numz = nums / depth;
 
-		double ddx= dx * slope;
-		double ddy= dy * slope;
-		double ddz= dz * slope;
-		double ddxy= Math.sqrt(dx * dx + dy * dy) * slope;
-		double ddxz= Math.sqrt(dx * dx + dz * dz) * slope;
-		double ddyz= Math.sqrt(dy * dy + dz * dz) * slope;
+		double ddx = dx * slope;
+		double ddy = dy * slope;
+		double ddz = dz * slope;
+		double ddxy = Math.sqrt(dx * dx + dy * dy) * slope;
+		double ddxz = Math.sqrt(dx * dx + dz * dz) * slope;
+		double ddyz = Math.sqrt(dy * dy + dz * dz) * slope;
 
 		ImageStack imf;
 		if (ims.getBitDepth() == 32) imf = ims.duplicate();
@@ -129,11 +129,11 @@ public class Lipschitz_3D implements PlugIn {
 						}	
 						imf.setVoxel(i, j, k, p);
 					}
-				IJ.showProgress(2*l*depth+k, 2*nums-1);
+				IJ.showProgress(2 * l * depth + k, 2 * nums - 1);
 			}
-			for (int k = (l + 1) * depth - 1; k >= l * depth; k--) {
-				for (int j = height - 1; j >= 0; j--)
-					for (int i = width - 1; i >= 0; i--) {
+			for (int k = (l + 1) * depth - 1; k >= l * depth; k --) {
+				for (int j = height - 1; j >= 0; j --)
+					for (int i = width - 1; i >= 0; i --) {
 						p = imf.getVoxel(i, j, k);					
 						if (i < width - 1) {
 							q = imf.getVoxel(i + 1, j, k) + ddx;
@@ -164,14 +164,14 @@ public class Lipschitz_3D implements PlugIn {
 						}					
 						imf.setVoxel(i, j, k, p);
 					}
-				IJ.showProgress(2*l*depth+2*depth-k-1, 2*nums-1);
+				IJ.showProgress(2 * l * depth + 2 * depth - k - 1, 2 * nums - 1);
 			}
 		}
 		
 		if (tophat) {
-			for (int k = 0; k < nums; k++)
-				for (int j = 0; j < height; j++)
-					for (int i = 0; i < width; i++)
+			for (int k = 0; k < nums; k ++)
+				for (int j = 0; j < height; j ++)
+					for (int i = 0; i < width; i ++)
 						ims.setVoxel(i, j, k, ims.getVoxel(i, j, k) - imf.getVoxel(i, j, k));
 		}
 		else {
@@ -184,7 +184,7 @@ public class Lipschitz_3D implements PlugIn {
 }
 	
 	private static void filterHyperstack(ImagePlus imp, double dx, double dy, double dz, double slope, boolean tophat) {
-		if (imp.getNChannels()==1) {
+		if (imp.getNChannels() == 1) {
 			ImageStack stack = filter(imp.getStack(), imp.getNSlices(), dx, dy, dz, slope, tophat);
 			imp.setStack(stack);
 			return;
@@ -196,7 +196,7 @@ public class Lipschitz_3D implements PlugIn {
 			channels[i].setStack(stack);
 		}
 		ImagePlus imp2 = RGBStackMerge.mergeChannels(channels, false);
-		int dims[]= imp.getDimensions();
+		int dims[] = imp.getDimensions();
 		imp.setImage(imp2);
 		imp.setDimensions(dims[2], dims[3], dims[4]);
 		imp.setC(1); //channel position
