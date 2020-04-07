@@ -505,7 +505,7 @@ public class Vector_Line_3D implements PlugIn {
 // end scales				
 					pimv.zero();
 					for(int n = 0; n < num_nodes; n ++) {
-						double[] d1 = new double[3];
+/*						double[] d1 = new double[3];
 						double[] d2 = new double[3];
 						double pangle;
 
@@ -517,7 +517,9 @@ public class Vector_Line_3D implements PlugIn {
 						d2[0] = Math.cos(pangle) * d1[0] - Math.sin(pangle) * d1[1];
 						d2[1] = Math.sin(pangle) * d1[0] + Math.cos(pangle) * d1[1];
 						d2[2] = d1[2];
-
+*/
+						double[] d2 = {Dirs.dirs[n][0], Dirs.dirs[n][1], Dirs.dirs[n][2]};
+						
 						double dangle =  Math.PI / ndir;
 						double rangle = Math.acos(d2[2]);
 						double[] axe = {-d2[1], d2[0], 0};
@@ -536,7 +538,7 @@ public class Vector_Line_3D implements PlugIn {
 // scales										
 										sigmav = sigma;
 										for (int v = 0; v < n_sc; v ++) {
-											double min = 0.; 
+											double min = Float.MAX_VALUE; 
 											int dx1 = Math.round((float)(e1[0] * sigmav * sqrt3 / dx)); 
 											int dy1 = Math.round((float)(e1[1] * sigmav * sqrt3 / dy)); 
 											int dz1 = Math.round((float)(e1[2] * sigmav * sqrt3 / dz)); 
@@ -548,8 +550,8 @@ public class Vector_Line_3D implements PlugIn {
 												double val= pimh.get(0, ii, jj, kk, v) * e1[0]
 														+ pimh.get(1, ii, jj, kk, v) * e1[1]
 														+ pimh.get(0, ii, jj, kk, v) * e1[2];
-												val = val * sigmav;
-												if (val < min) min = - val;
+												val = - val * sigmav;
+												if (val < min) min = val;
 											}
 											
 											ii = i - dx1;
@@ -562,6 +564,7 @@ public class Vector_Line_3D implements PlugIn {
 												val = val * sigmav;
 												if (val < min) min = val;											
 											}
+											if (min == Float.MAX_VALUE) min = 0.; 
 											if (min > max) max = min;
 											sigmav = sigmav / 2.;
 										}
