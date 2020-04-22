@@ -250,6 +250,7 @@ public class Vector_Line_3D implements PlugIn {
 		}
 // new image		
 		ImagePlus outp = new ImagePlus("Vector Line 3D Filtered", res); 
+		outp.setCalibration(cal);
 		outp.setDisplayRange(0., maxv);
 		outp.show();
 		outp.updateAndDraw();
