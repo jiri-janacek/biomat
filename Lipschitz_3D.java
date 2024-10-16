@@ -235,7 +235,7 @@ public class Lipschitz_3D implements PlugIn {
 		new ImageJ();
 
 		// open the capillaries sample
-		ImagePlus image = IJ.openImage("https://imagej.net/_images/2/2e/Capillaries_brain.zip");
+		ImagePlus image = IJ.openImage("https://imagej.github.io/media/plugins/capillaries-brain.zip");
 		image.show();
 
 		// run the plugin

@@ -624,7 +624,7 @@ public class Vector_Line_3D implements PlugIn {
 		new ImageJ();
 
 		// open the capillaries sample
-		ImagePlus image = IJ.openImage("https://imagej.net/_images/e/e9/Capillaries_heart.zip");
+		ImagePlus image = IJ.openImage("https://imagej.github.io/media/plugins/capillaries-heart.zip");
 		image.show();
 
 		// run the plugin

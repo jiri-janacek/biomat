@@ -93,18 +93,18 @@ public class StackLin_Contrast implements PlugIn {
 	public void process(ImagePlus image) {
 		int type = image.getType();
 		
-		if ((type == ImagePlus.GRAY8)||(type == ImagePlus.GRAY16)||
-				(type == ImagePlus.GRAY32)||(type == ImagePlus.COLOR_RGB))
+		if ((type == ImagePlus.GRAY8) || (type == ImagePlus.GRAY16)
+				|| (type == ImagePlus.GRAY32) || (type == ImagePlus.COLOR_RGB))
 		// slice numbers start with 1 for historical reasons
-			for (int i = 1; i <= image.getStackSize(); i++) {
+			for (int i = 1; i <= image.getStackSize(); i ++) {
 				int pos[]= image.convertIndexToPosition(i);
 				double coeff;
 				if (image.getNSlices() == 1) 
-					coeff= first;
+					coeff = first;
 				else
-					coeff= ((double)(image.getNSlices()-pos[1])*first+(double)(pos[1]-1)*last)/(double)(image.getNSlices()-1);
-				if ((type == ImagePlus.GRAY8)||(type == ImagePlus.GRAY16)||
-						(type == ImagePlus.GRAY32)||(type == ImagePlus.COLOR_RGB))
+					coeff = ((double)(image.getNSlices()-pos[1]) * first + (double)(pos[1] - 1) * last) / (double)(image.getNSlices() - 1);
+				if ((type == ImagePlus.GRAY8)||(type == ImagePlus.GRAY16)
+						|| (type == ImagePlus.GRAY32) || (type == ImagePlus.COLOR_RGB))
 					image.getStack().getProcessor(i).multiply(coeff);
 			}
 		else {
@@ -137,7 +137,7 @@ public class StackLin_Contrast implements PlugIn {
 		new ImageJ();
 
 		// open the capillaries sample
-		ImagePlus image = IJ.openImage("https://imagej.net/_images/2/2e/Capillaries_brain.zip");
+		ImagePlus image = IJ.openImage("https://imagej.github.io/media/plugins/capillaries-brain.zip");
 		image.show();
 
 		// run the plugin
