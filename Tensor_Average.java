@@ -79,7 +79,7 @@ public class Tensor_Average implements PlugIn {
 			a[1][1] /= num;
 		}
 
-		a[1][0] = a[0][1];
+//		a[1][0] = a[0][1];
 		double angle = Math.atan2(2.0 * a[0][1], a[1][1] - a[0][0]);
 		angle += Math.PI;
 		angle *= 90.0 / Math.PI;
@@ -107,7 +107,7 @@ public class Tensor_Average implements PlugIn {
 
 	public void showAbout() {
 		IJ.showMessage("Tensor Average",
-			"for presenting structure tensor image"
+			"for evaluating structure tensor image"
 		);
 	}
 
@@ -130,8 +130,7 @@ public class Tensor_Average implements PlugIn {
 		new ImageJ();
 
 		// open the capillaries sample
-		ImagePlus image = IJ.openImage("D:/data/tif/MAX_2_4cortexa1_tens.tif");
-				//("https://imagej.net/_images/2/2e/Capillaries_brain.zip");
+		ImagePlus image = IJ.openImage("https://github.com/jiri-janacek/biomat/raw/0381683d9a39c3bc723f8e9013d543fa50c712f0/media/MAX_2_4cortexa1_tens.tif");
 		image.show();
 
 		// run the plugin

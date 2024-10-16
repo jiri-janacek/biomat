@@ -31,7 +31,7 @@ public class Heat_Kernel_Tensor implements PlugIn {
 		
 		if (! ((type == ImagePlus.GRAY8) || (type == ImagePlus.GRAY16)
 				|| (type == ImagePlus.GRAY32))) {
-			IJ.error("Heat_Kernel_Tensor", "unsupported image type");
+			IJ.error("Heat Kernel Tensor", "unsupported image type");
 			return;
 		}
 
@@ -56,9 +56,6 @@ public class Heat_Kernel_Tensor implements PlugIn {
 		// get entered values
 		sigma = gd.getNextNumber();
 		
-		time = sigma * sigma / 2.0;
-		step = 0.5;
-		
 		return true;
 	}
 
@@ -67,10 +64,13 @@ public class Heat_Kernel_Tensor implements PlugIn {
 		Calibration cal = imp.getCalibration();
 		double dx = cal.pixelWidth;
 		double dy = cal.pixelHeight;
+		time = sigma * sigma / 2.0;
+		step = 0.5 * Math.pow(dx * dy, 0.25);
 		IJ.showStatus("Calculating Heat Kernel Tensor.");
 		ImageStack res = filter(imp.getStack(), dx, dy, sigma);
 		ImagePlus outp = new ImagePlus("Heat Kernel Tensor", res); 
 		outp.setDimensions(3 * dims[2], dims[3], dims[4]);
+		outp.setCalibration(cal);
 		outp.setC(1); //channel position
 		outp.show();
 		outp.updateAndDraw();
@@ -111,8 +111,9 @@ public class Heat_Kernel_Tensor implements PlugIn {
 						totnum += num;
 					}
 			double wght[] = new double[2];
-			wght[0] = 1. / dx;
-			wght[1] = 1. / dy;
+			wght[0] = 1. / (dx * dx);
+			wght[1] = 1. / (dy * dy);
+
 			int sparse[] = new int[totnum];
 			short wi[] = new short[totnum];
 			int r = 0;
@@ -132,7 +133,7 @@ public class Heat_Kernel_Tensor implements PlugIn {
 						}
 						if ((j > 0) && (lab[p - 1] > 0)) {
 							sparse[r] = lab[p - 1] - 1; 
-							wi[r] = 0;
+							wi[r] =  0;
 							r ++;
 						}
 						if ((j < (width - 1)) && (lab[p + 1] > 0)) {
@@ -193,7 +194,7 @@ public class Heat_Kernel_Tensor implements PlugIn {
 			IJ.showProgress(slice * 5 + 5, size * 5);
 	
 			p = 0;
-			for (int i = 0; i < height; i ++) {
+			for (int i = 0; i < height; i ++) 
 				for (int j = 0; j < width; j ++, p ++)
 				if (lab[p] > 0) {
 					l = lab[p] - 1;
@@ -201,7 +202,7 @@ public class Heat_Kernel_Tensor implements PlugIn {
 					imout.setVoxel(j, i, slice * 3 + 1, uxy[l] - ux[l] * uy[l]);
 					imout.setVoxel(j, i, slice * 3 + 2, uyy[l] - uy[l] * uy[l]);
 				}
-			}
+			
 		}
 		return imout;
 	}
@@ -272,8 +273,7 @@ public class Heat_Kernel_Tensor implements PlugIn {
 		new ImageJ();
 
 		// open the capillaries sample
-		ImagePlus image = IJ.openImage("D:/data/tif/MAX_2_4cortexa1.tif");
-				//("https://imagej.net/_images/2/2e/Capillaries_brain.zip");
+		ImagePlus image = IJ.openImage("https://github.com/jiri-janacek/biomat/raw/e42ca4c3e8dc2b16defa18b01baa0c15f856e883/media/MAX_2_4cortexa1.tif");
 		image.show();
 
 		// run the plugin

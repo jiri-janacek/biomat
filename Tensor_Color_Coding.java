@@ -8,6 +8,7 @@ import ij.ImagePlus;
 import ij.ImageStack;
 //import ij.gui.GenericDialog;
 //import ij.measure.Calibration;
+import ij.measure.Calibration;
 
 /**
  * color coding of 2D tensor
@@ -39,11 +40,13 @@ public class Tensor_Color_Coding implements PlugIn {
 	}
 
 	private void run(ImagePlus imp) {
+		Calibration cal = imp.getCalibration();
 		int dims[] = imp.getDimensions();
 		IJ.showStatus("Calculating Tensor Color Coding.");
 		ImageStack res = filter(imp.getStack());
 		ImagePlus outp = new ImagePlus("Color Coded Tensor", res); 
 		outp.setDimensions(dims[2] / 3, dims[3], dims[4]);
+		outp.setCalibration(cal);
 		outp.setC(1); //channel position
 		outp.show();
 		outp.updateAndDraw();
@@ -166,8 +169,7 @@ public class Tensor_Color_Coding implements PlugIn {
 		new ImageJ();
 
 		// open the capillaries sample
-		ImagePlus image = IJ.openImage("D:/data/tif/MAX_2_4cortexa1_tens.tif");
-				//("https://imagej.net/_images/2/2e/Capillaries_brain.zip");
+		ImagePlus image = IJ.openImage("https://github.com/jiri-janacek/biomat/raw/0381683d9a39c3bc723f8e9013d543fa50c712f0/media/MAX_2_4cortexa1_tens.tif");
 		image.show();
 
 		// run the plugin
