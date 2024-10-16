@@ -169,7 +169,7 @@ public class Tensor_Color_Coding implements PlugIn {
 		new ImageJ();
 
 		// open the capillaries sample
-		ImagePlus image = IJ.openImage("https://github.com/jiri-janacek/biomat/raw/0381683d9a39c3bc723f8e9013d543fa50c712f0/media/MAX_2_4cortexa1_tens.tif");
+		ImagePlus image = IJ.openImage("https://raw.githubusercontent.com/jiri-janacek/biomat/master/media/MAX_2_4cortexa1_tens.tif");
 		image.show();
 
 		// run the plugin

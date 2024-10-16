@@ -273,7 +273,7 @@ public class Heat_Kernel_Tensor implements PlugIn {
 		new ImageJ();
 
 		// open the capillaries sample
-		ImagePlus image = IJ.openImage("https://github.com/jiri-janacek/biomat/raw/e42ca4c3e8dc2b16defa18b01baa0c15f856e883/media/MAX_2_4cortexa1.tif");
+		ImagePlus image = IJ.openImage("https://raw.githubusercontent.com/jiri-janacek/biomat/master/media/MAX_2_4cortexa1.tif");
 		image.show();
 
 		// run the plugin
