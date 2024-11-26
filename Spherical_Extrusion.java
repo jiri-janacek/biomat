@@ -200,7 +200,7 @@ public class Spherical_Extrusion implements PlugIn {
 		new ImageJ();
 
 		// open the sample
-		ImagePlus image = IJ.openImage("https://raw.githubusercontent.com/jiri-janacek/biomat/b9b53126134ac7e9fbca9a29de66bc7f2b7c845e/media/simobjinv.tif");
+		ImagePlus image = IJ.openImage("https://raw.githubusercontent.com/jiri-janacek/biomat/c3f75436ccf4b863dbdf6267a352b129b28a89a7/media/simobjinv.tif");
 		image.show();
 
 		// run the plugin
