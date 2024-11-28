@@ -23,8 +23,10 @@ public class Distance_Map_3D implements PlugIn {
 			return;
 		ImagePlus imp = IJ.getImage();
         ImageProcessor ip = imp.getProcessor();
-        if (! (ip.isBinary() && (imp.getNSlices() > 1) && (imp.getNSlices() == imp.getStackSize()))) {
-            IJ.error("single z-stack of 8-bit binary images (0 and 255) required.");
+//        if (! (ip.isBinary() && (imp.getNSlices() > 1) && (imp.getNSlices() == imp.getStackSize()))) {
+//            IJ.error("single z-stack of 8-bit binary images (0 and 255) required.");
+        if (! ip.isBinary()) {
+            IJ.error("8-bit binary images (0 and 255) required.");
 			return;
 		}
 
@@ -41,7 +43,10 @@ public class Distance_Map_3D implements PlugIn {
 		double dy = cal.pixelHeight;
 		double dz = cal.pixelDepth;
 		IJ.showStatus("Calculating Distance Map 3D.");
-		ImageStack res = filter(imp.getStack(), dx, dy, dz);
+		ImageStack res;
+		if (imp.isHyperStack())	
+			res = filterHyperstack(imp, dx, dy, dz);
+		else res = filter(imp.getStack(), dims[3], dims[4], dx, dy, dz);
 //find maximum
 		double maxv = 0.;
 		int nums = res.getSize();
@@ -51,14 +56,16 @@ public class Distance_Map_3D implements PlugIn {
 			if (maxv < stat.max) maxv = stat.max;
 		}	
 		ImagePlus outp = new ImagePlus("Distance Map 3D", res); 
-		outp.setDimensions(6, dims[3], 1); // xyCzt, 2 and 4 shall be 1; TODO hyperstack
+		outp.setDimensions(dims[2], dims[3], dims[4]); // xyCzt
 		outp.setCalibration(cal);
 		outp.setC(1); //channel position
 		outp.setDisplayRange(0., maxv);
+		outp.setOpenAsHyperStack(imp.isHyperStack());
 		outp.show();
 		outp.updateAndDraw();
 	}
-	public static ImageStack filter(ImageStack ims, double dx, double dy, double dz) {
+	
+	public static ImageStack filter(ImageStack ims, int nz, int nt, double dx, double dy, double dz) {
 		
 		
 		class Aac1 {
@@ -148,24 +155,42 @@ public class Distance_Map_3D implements PlugIn {
 //utils			
 		int nx = width;
 		int ny = height;
-		int nz = size;
 		
 		float img[] = new float [ny * nx * nz];//buffer
 		Aac1 pimg = new Aac1(nx, ny, nz, img);
 		
-		ims.getVoxels(0, 0, 0, nx, ny, nz, img);
-		pimg.setif(Float.MAX_VALUE);
+		for (int i = 0; i < nt; i++) {
+			ims.getVoxels(0, 0, i * nz, nx, ny, nz, img);
+			pimg.setif(Float.MAX_VALUE);
 			
 //opening by paraboloid			
 	//squared ED map = erosion by paraboloid
-		pimg.erode_by_parabola(1, dx, Float.MAX_VALUE);			
-		pimg.erode_by_parabola(2, dy, Float.MAX_VALUE);
-		pimg.erode_by_parabola(3, dz, Float.MAX_VALUE);
+			pimg.erode_by_parabola(1, dx, Float.MAX_VALUE);			
+			pimg.erode_by_parabola(2, dy, Float.MAX_VALUE);
+			pimg.erode_by_parabola(3, dz, Float.MAX_VALUE);
 			
-		pimg.sqrt();
-		imout.setVoxels(0, 0, 0, nx, ny, nz, img);
+			pimg.sqrt();
+			imout.setVoxels(0, 0, i * nz, nx, ny, nz, img);
+		}
 
 		return imout;
+	}
+
+	private static ImageStack filterHyperstack(ImagePlus imp, double dx, double dy, double dz) {
+		int dims[] = imp.getDimensions();
+		if (dims[2] == 1) {
+			ImageStack stack = filter(imp.getStack(), dims[3], dims[4] , dx, dy, dz);
+			return stack;
+	    }
+        ImagePlus[] channels = ChannelSplitter.split(imp);
+        int nch = channels.length;
+        for (int i = 0; i < nch; i++) {
+			ImageStack stack = filter(channels[i].getStack(), imp.getNSlices(), imp.getNFrames(), dx, dy, dz);
+			channels[i].setStack(stack);
+		}
+		ImagePlus outp = RGBStackMerge.mergeChannels(channels, false);
+		ImageStack stack =  outp.getStack();
+		return stack;
 	}
 
 	public void showAbout() {
@@ -192,7 +217,8 @@ public class Distance_Map_3D implements PlugIn {
 		new ImageJ();
 
 		// open the sample
-		ImagePlus image = IJ.openImage("https://raw.githubusercontent.com/jiri-janacek/biomat/93f0fbe74646db4588feb99e86cb3ba35288dcc2/media/testball.tif");
+		ImagePlus image = IJ.openImage//("C:/src/ImageJ/Biomat/hyperball.tif");
+				("https://raw.githubusercontent.com/jiri-janacek/biomat/93f0fbe74646db4588feb99e86cb3ba35288dcc2/media/testball.tif");
 		image.show();
 
 		// run the plugin
